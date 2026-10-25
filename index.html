@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>75 Medium Tracker</title>
+<meta name="theme-color" content="#1f6f5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="75 Medium">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231f6f5c'/%3E%3Ctext x='50' y='66' font-size='46' font-weight='700' font-family='Arial,sans-serif' text-anchor='middle' fill='%23f2b632'%3E75%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+:root{--bg:#eef3f1;--surface:#fff;--ink:#14312b;--muted:#5d7770;--line:#cfdcd7;--accent:#1f6f5c;--on-accent:#fff;--gold:#f2b632;--miss:#c9d6d1;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1f1b;--surface:#172b26;--ink:#e6f1ed;--muted:#8fa9a1;--line:#2a443d;--accent:#4cc3a3;--on-accent:#0f1f1b;--gold:#f2b632;--miss:#2a443d}}
+:root[data-theme="dark"]{--bg:#0f1f1b;--surface:#172b26;--ink:#e6f1ed;--muted:#8fa9a1;--line:#2a443d;--accent:#4cc3a3;--on-accent:#0f1f1b;--gold:#f2b632;--miss:#2a443d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+main{max-width:480px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:2.4rem;font-weight:800;margin:0;letter-spacing:-.02em;line-height:1.05}
+.sub{color:var(--muted);margin:4px 0 18px}
+.stats{display:flex;gap:10px;margin-bottom:18px}
+.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:1.5rem;font-weight:800}
+.stat span{color:var(--muted);font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(15,1fr);gap:5px;margin-bottom:22px}
+.dot{aspect-ratio:1;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer;opacity:.55}
+.dot.done{background:var(--gold);opacity:1}
+.dot.missed{background:var(--miss);opacity:1;box-shadow:inset 0 0 0 2px var(--muted)}
+.dot.today{opacity:1;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.dot.sel{outline:2px solid var(--ink);outline-offset:2px}
+.dot:disabled{cursor:default}
+h2{font-size:1.15rem;margin:0 0 10px;font-weight:600}
+.task{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer}
+.box{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--muted);display:grid;place-items:center;font-weight:800;color:var(--on-accent)}
+.task.on{border-color:var(--accent)}
+.task.on .box{background:var(--accent);border-color:var(--accent)}
+.task small{display:block;color:var(--muted)}
+.water{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:8px}
+.water.on{border-color:var(--accent)}
+.bar{height:10px;border-radius:5px;background:var(--line);margin:10px 0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+button.btn{font:inherit;font-weight:600;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:10px;padding:10px 16px;cursor:pointer}
+button.btn.alt{background:transparent;color:var(--accent)}
+.cheat{color:var(--muted);font-size:.9rem;margin:2px 2px 14px}
+.cheat button{font:inherit;color:var(--accent);background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+.banner{background:var(--gold);color:#14312b;border-radius:14px;padding:12px 14px;font-weight:600;margin-bottom:14px}
+input[type=date]{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.foot{margin-top:26px;text-align:center}
+.foot button{font:inherit;color:var(--muted);background:none;border:0;text-decoration:underline;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var KEY="p75medium",N=75,GAL=128;
+var S={start:null,days:{}},sel=null,armed=false;
+try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);if(p&&p.days)S=p}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function ds(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function pd(s){var a=s.split("-");return new Date(+a[0],+a[1]-1,+a[2])}
+function add(s,n){var d=pd(s);d.setDate(d.getDate()+n);return ds(d)}
+function diff(a,b){return Math.round((pd(b)-pd(a))/864e5)}
+function day(k){return S.days[k]||(S.days[k]={diet:0,workout:0,read:0,photo:0,cheat:0,water:0})}
+function full(k){var d=S.days[k];return !!(d&&d.diet&&d.workout&&d.read&&d.photo&&d.water>=GAL)}
+function toggle(f){var d=day(sel);d[f]=d[f]?0:1;save();render()}
+function water(n){var d=day(sel);d.water=Math.max(0,Math.min(GAL+64,d.water+n));save();render()}
+function start(){var v=document.getElementById("sd").value||ds(new Date());S.start=v;sel=null;save();render()}
+function reset(){if(!armed){armed=true;render();return}S={start:null,days:{}};armed=false;sel=null;save();render()}
+function pick(k){sel=k;render()}
+function render(){
+var el=document.getElementById("app");
+if(!S.start){
+el.innerHTML='<h1>75 Medium</h1><p class="sub">Seventy-five days. Five daily tasks. Miss a day and you keep going.</p><h2>Pick your start date</h2><div class="row" style="justify-content:flex-start"><input id="sd" type="date" value="'+ds(new Date())+'"><button class="btn" onclick="start()">Start challenge</button></div>';
+return}
+var today=ds(new Date()),n=Math.min(N,Math.max(1,diff(S.start,today)+1)),before=diff(S.start,today)<0;
+if(!sel)sel=before?S.start:(diff(S.start,today)>=N?add(S.start,N-1):today);
+var done=0,streak=0,i,k,lastIdx=Math.min(N-1,diff(S.start,today));
+for(i=0;i<N;i++){if(full(add(S.start,i)))done++}
+for(i=lastIdx;i>=0;i--){k=add(S.start,i);if(full(k))streak++;else if(i===lastIdx&&k===today)continue;else break}
+var g="";
+for(i=0;i<N;i++){k=add(S.start,i);var c="dot";
+if(full(k))c+=" done";else if(diff(S.start,today)>i)c+=" missed";
+if(k===today)c+=" today";if(k===sel)c+=" sel";
+var fut=diff(k,today)<0;
+g+='<button class="'+c+'" '+(fut?"disabled ":"")+'aria-label="Day '+(i+1)+(full(k)?", complete":"")+'" onclick="pick(\''+k+'\')"></button>'}
+var d=day(sel),idx=diff(S.start,sel),wk=Math.floor(idx/7),cheats=0;
+for(i=wk*7;i<Math.min(N,wk*7+7);i++){var q=S.days[add(S.start,i)];if(q&&q.cheat)cheats++}
+var pct=Math.min(100,Math.round(d.water/GAL*100));
+var t=[["diet","Followed my diet","One cheat meal a week is allowed"],["workout","45-minute workout","Any kind, indoors or out"],["read","Read 10 pages","Any book counts"],["photo","Progress photo","Same spot, same light"]];
+var h='<h1>Day '+(before?0:n)+' of '+N+'</h1><p class="sub">'+(sel===today?"Today":pd(sel).toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"}))+(before?" · starts "+S.start:"")+'</p>';
+h+='<div class="stats"><div class="stat"><b>'+done+'</b><span>days complete</span></div><div class="stat"><b>'+streak+'</b><span>day streak</span></div><div class="stat"><b>'+(N-done)+'</b><span>to go</span></div></div>';
+if(done>=N)h+='<div class="banner">You finished 75 Medium. Well done.</div>';
+h+='<div class="grid">'+g+'</div>';
+h+='<h2>'+(sel===today?"Today’s tasks":"Tasks for Day "+(idx+1))+(full(sel)?" — all done":"")+'</h2>';
+t.forEach(function(x){h+='<button class="task'+(d[x[0]]?" on":"")+'" onclick="toggle(\''+x[0]+'\')" aria-pressed="'+(d[x[0]]?"true":"false")+'"><span class="box">'+(d[x[0]]?"✓":"")+'</span><span>'+x[1]+'<small>'+x[2]+'</small></span></button>'});
+h+='<div class="water'+(d.water>=GAL?" on":"")+'"><div class="row"><span><b>Drink a gallon of water</b></span><span>'+d.water+' / '+GAL+' oz</span></div><div class="bar"><i style="width:'+pct+'%"></i></div><div class="row"><button class="btn alt" onclick="water(-16)">−16 oz</button><button class="btn" onclick="water(16)">+16 oz</button></div></div>';
+h+='<p class="cheat">Cheat meals this week: '+cheats+' of 1. <button onclick="toggle(\'cheat\')">'+(d.cheat?"Remove cheat meal for this day":"Log cheat meal for this day")+'</button></p>';
+h+='<div class="foot"><button onclick="reset()">'+(armed?"Tap again to erase all progress":"Reset challenge")+'</button></div>';
+el.innerHTML=h;
+if(armed){armed=false}
+}
+render();
+</script>
+</body>
+</html>
